@@ -1,0 +1,13 @@
+[project]
+name = "f1-backend"
+version = "0.1.0"
+description = "Backend with FastF1, SQLite, and Peewee"
+requires-python = ">=3.11"
+dependencies = [
+    "fastf1",
+    "peewee",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

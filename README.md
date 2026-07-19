@@ -18,10 +18,10 @@ coaching feedback on driver mistakes.
 
 **Data**
 
-- [ ] Ingestion script: fetch a race session via FastF1
-- [ ] Parse laps, sector times, per-lap telemetry, driver/team metadata, weather
+- [x] Ingestion script: fetch a race session via FastF1
+- [x] Parse laps, sector times, per-lap telemetry, driver/team metadata, weather
 - [ ] Compute delta-to-fastest-lap and cumulative distance per lap
-- [ ] Write peewee models + SQLite schema
+- [x] Write peewee models + SQLite schema
 - [ ] Make ingestion idempotent (safe to re-run)
 
 **Backend**

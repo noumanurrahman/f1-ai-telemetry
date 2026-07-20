@@ -57,7 +57,7 @@ def insert_drivers(session, race: Race):
             status=status,
             points=points
         )
-        bulk_drivers.append(race_entry)
+        bulk_drivers.append(race_entry[0])
     return bulk_drivers
 
 
@@ -66,7 +66,7 @@ def insert_laps(session, driver):
     final_laps = []
     for lap in laps.iterlaps():
         lap_info = lap[1]
-        final_laps.append(Lap.create(
+        final_laps.append(Lap.get_or_create(
             entry=RaceEntry.get(RaceEntry.driver_code == driver),
             lap_number=lap_info["LapNumber"],
             lap_time_seconds=lap_info["LapTime"].total_seconds() if lap_info["LapTime"] else None,
@@ -81,7 +81,7 @@ def insert_laps(session, driver):
             position=lap_info["Position"],
             is_personal_best=lap_info["IsPersonalBest"],
             is_accurate=lap_info["IsAccurate"]
-        ))
+        )[0])
     return final_laps
 
 

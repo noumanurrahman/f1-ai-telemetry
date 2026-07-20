@@ -26,12 +26,11 @@ coaching feedback on driver mistakes.
 
 **Backend**
 
-- [ ] `GET /seasons`, `/races`, `/sessions`, `/drivers`, `/laps`
-- [ ] `GET /sessions/{id}/laps/{id}/telemetry`
-- [ ] `GET /sessions/{id}/results`
+- [x] `GET /seasons`, `/races`, `/drivers`, `/laps`
+- [x] `GET /races/{id}/laps/{id}/telemetry`
+- [x] `GET /races/{id}/results`
 - [ ] `POST /analysis/{lap_id}`
-- [ ] Serve built frontend as static files
-- [ ] Basic error handling
+- [x] Basic error handling
 
 **AI**
 

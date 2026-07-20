@@ -62,9 +62,6 @@ class Lap(BaseModel):
     is_pit_lap = pw.BooleanField(default=False)  # PitInTime or PitOutTime was set
     delta_to_fastest = pw.FloatField(null=True)
 
-    class Meta:
-        indexes = ((("entry", "lap_number"), True),)
-
 
 class AICoachingCache(BaseModel):
     lap = pw.ForeignKeyField(Lap, backref="coaching", unique=True, on_delete="CASCADE")

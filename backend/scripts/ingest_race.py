@@ -14,7 +14,7 @@ def main():
     insert_drivers(session, race[0])
     drivers = session.laps["Driver"].unique()
     for driver in drivers:
-        insert_laps(session, driver)
+        insert_laps(session, driver, race[0])
 
 
 def insert_race(session) -> tuple[Race, bool]:
@@ -61,7 +61,7 @@ def insert_drivers(session, race: Race):
     return bulk_drivers
 
 
-def insert_laps(session, driver):
+def insert_laps(session, driver, race: Race):
     laps = session.laps.pick_drivers(driver)
     fastest = laps.pick_fastest()
     print(fastest)
@@ -72,7 +72,7 @@ def insert_laps(session, driver):
         if fastest is not None:
             delta = fastest["LapTime"] - lap_info["LapTime"]
         final_laps.append(Lap.get_or_create(
-            entry=RaceEntry.get(RaceEntry.driver_code == driver),
+            entry=RaceEntry.get((RaceEntry.race == race) & (RaceEntry.driver_code == driver)),
             lap_number=lap_info["LapNumber"],
             lap_time_seconds=lap_info["LapTime"].total_seconds() if lap_info["LapTime"] else None,
             sector1_seconds=lap_info["Sector1Time"].total_seconds() if lap_info["Sector1Time"] else None,

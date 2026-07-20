@@ -60,6 +60,7 @@ class Lap(BaseModel):
     is_accurate = pw.BooleanField(default=True)  # FastF1's own validity flag
     deleted = pw.BooleanField(default=False)  # e.g. track limits infringement
     is_pit_lap = pw.BooleanField(default=False)  # PitInTime or PitOutTime was set
+    delta_to_fastest = pw.FloatField(null=True)
 
     class Meta:
         indexes = ((("entry", "lap_number"), True),)

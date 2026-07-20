@@ -63,9 +63,14 @@ def insert_drivers(session, race: Race):
 
 def insert_laps(session, driver):
     laps = session.laps.pick_drivers(driver)
+    fastest = laps.pick_fastest()
+    print(fastest)
     final_laps = []
     for lap in laps.iterlaps():
         lap_info = lap[1]
+        delta = pd.NaT
+        if fastest is not None:
+            delta = fastest["LapTime"] - lap_info["LapTime"]
         final_laps.append(Lap.get_or_create(
             entry=RaceEntry.get(RaceEntry.driver_code == driver),
             lap_number=lap_info["LapNumber"],
@@ -80,7 +85,8 @@ def insert_laps(session, driver):
             stint=lap_info["Stint"],
             position=lap_info["Position"],
             is_personal_best=lap_info["IsPersonalBest"],
-            is_accurate=lap_info["IsAccurate"]
+            is_accurate=lap_info["IsAccurate"],
+            delta_to_fastest=delta.total_seconds() if not pd.isnull(delta) else None,
         )[0])
     return final_laps
 

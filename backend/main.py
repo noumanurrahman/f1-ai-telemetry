@@ -13,12 +13,22 @@ def read_root():
 
 @app.get("/seasons")
 def read_seasons():
-    return [i for i in range(2022, 2026)]
+    races = get_races(None)
+    years = []
+    for race in races:
+        if race["year"] not in years:
+            years.append(race["year"])
+    return years
 
 
 @app.get("/races/{year}")
 def read_races(year: int):
-    races: list[Race] = Race.select().where(Race.year == year).execute()
+    races = get_races(year)
+    return races
+
+
+def get_races(year):
+    races: list[Race] = Race.select().where((Race.year == year) if year is not None else None).execute()
     races_json = []
     for race in races:
         races_json.append({
@@ -29,6 +39,7 @@ def read_races(year: int):
             "raceDate": race.race_date,
             "totalLaps": race.total_laps,
             "roundNumber": race.round_number,
+            "year": race.year,
         })
     return races_json
 

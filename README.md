@@ -58,4 +58,7 @@ coaching feedback on driver mistakes.
 
 ## Status
 
-Planning complete. Engineering not started.
+Planning complete.
+Backend's basics implemented.
+Frontend skeleton in place.
+AI integration pending.

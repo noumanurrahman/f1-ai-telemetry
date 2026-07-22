@@ -114,33 +114,40 @@ def read_laps(year: int, round_number: int, driver_code: str):
     return laps_json
 
 
-@app.get("/races/{year}/{round_number}/{driver_code}/laps/{lap_number}")
-def read_laps(year: int, round_number: int, driver_code: str, lap_number: int):
+@app.get("/races/{year}/{round_number}/laps/{lap_number}")
+def read_laps_by_number(year: int, round_number: int, lap_number: int):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    entry = RaceEntry.select().where((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code)).first()
-    lap: Lap = Lap.select().where((Lap.entry == entry) & (Lap.lap_number == lap_number)).first()
-    if not lap:
-        return {"error": "Lap not found"}
-    lap_json = {
-        "lapNumber": lap.lap_number,
-        "lapTime": lap.lap_time_seconds,
-        "sector1Time": lap.sector1_seconds,
-        "sector2Time": lap.sector2_seconds,
-        "sector3Time": lap.sector3_seconds,
-        "compound": lap.compound,
-        "tyreLife": lap.tyre_life,
-        "freshTyre": lap.fresh_tyre,
-        "stint": lap.stint,
-        "position": lap.position,
-        "isPitLap": lap.is_pit_lap,
-        "isAccurate": lap.is_accurate,
-        "isPersonalBest": lap.is_personal_best,
-        "deleted": lap.deleted,
-        "deltaToFastest": lap.delta_to_fastest,
-    }
-    return lap_json
+    entries: list[RaceEntry] = RaceEntry.select().where(RaceEntry.race == race).execute()
+    laps = []
+    for entry in entries:
+        lap: Lap = Lap.select().where((Lap.entry == entry) & (Lap.lap_number == lap_number)).first()
+        laps.append({
+            "lapNumber": lap.lap_number,
+            "lapTime": lap.lap_time_seconds,
+            "driver": {
+                "code": entry.driver_code,
+                "number": entry.driver_number,
+                "fullName": entry.full_name,
+                "teamName": entry.team_name,
+                "headshotUrl": entry.headshot_url,
+            },
+            "sector1Time": lap.sector1_seconds,
+            "sector2Time": lap.sector2_seconds,
+            "sector3Time": lap.sector3_seconds,
+            "compound": lap.compound,
+            "tyreLife": lap.tyre_life,
+            "freshTyre": lap.fresh_tyre,
+            "stint": lap.stint,
+            "position": lap.position,
+            "isPitLap": lap.is_pit_lap,
+            "isAccurate": lap.is_accurate,
+            "isPersonalBest": lap.is_personal_best,
+            "deleted": lap.deleted,
+            "deltaToFastest": lap.delta_to_fastest,
+        })
+    return laps
 
 
 @app.get("/races/{year}/{round_number}/{driver_code}/laps/{lap_number}/telemetry")

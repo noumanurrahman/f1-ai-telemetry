@@ -58,7 +58,7 @@ coaching feedback on driver mistakes.
 
 ## Status
 
-Planning complete.
-Backend's basics implemented.
-Frontend skeleton in place.
-AI integration pending.
+- Planning complete.
+- Backend's basics implemented.
+- Frontend skeleton in place.
+- AI integration pending.

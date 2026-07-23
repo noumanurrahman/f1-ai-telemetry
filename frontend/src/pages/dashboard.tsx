@@ -8,6 +8,7 @@ export async function clientLoader({params}: Route.LoaderArgs) {
 
 export default function Component({loaderData}: Route.ComponentProps) {
     return (
-        <h1>DASHBOARD – {loaderData.driver.fullName} ({loaderData.driver.teamName})</h1>
+        <h1>DASHBOARD – {loaderData.driver.fullName} ({loaderData.driver.driverCode}) POS:
+            [{loaderData.driver.classifiedPosition}]</h1>
     )
 }

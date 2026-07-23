@@ -12,7 +12,7 @@ export function Layout({children}: { children: ReactNode }) {
             <Links/>
             <title>F1 AI Telemetry</title>
         </head>
-        <body id="root" className="dark">
+        <body id="root" className="dark px-12 py-4">
         {children}
         <ScrollRestoration/>
         <Scripts/>

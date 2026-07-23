@@ -4,6 +4,9 @@ import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVal
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import type {Race} from "@/src/api/types.ts";
+import {Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
+import {Badge} from "@/components/ui/badge"
+import {Button} from "@/components/ui/button"
 
 export async function clientLoader() {
     const seasons = await dataService.seasons();
@@ -42,8 +45,23 @@ export default function Component({loaderData}: Route.ComponentProps) {
             </Select>
             <h1>Selected season is {season}</h1>
             {races.map((race) => (
-                <li onClick={() => navigate(`/race/${race.year}/${race.roundNumber}`)}
-                    key={race.roundNumber}>{race.eventName}</li>
+                <Card key={race.roundNumber} className="max-w-sm my-4">
+                    <CardHeader>
+                        <CardAction>
+                            <Badge variant="secondary">{race.year}</Badge>
+                        </CardAction>
+                        <CardTitle>{race.eventName}</CardTitle>
+                        <CardDescription>
+                            {race.location} – ROUND: {race.roundNumber} – LAPS: {race.totalLaps}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button onClick={() => navigate(`/race/${race.year}/${race.roundNumber}`)}
+                                className="w-full">
+                            View Race
+                        </Button>
+                    </CardFooter>
+                </Card>
             ))}
         </>
     )

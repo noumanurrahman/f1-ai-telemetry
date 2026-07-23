@@ -56,7 +56,7 @@ export default function Component({loaderData}: Route.ComponentProps) {
                         </CardDescription>
                     </CardHeader>
                     <CardFooter>
-                        <Button onClick={() => navigate(`/race/${race.year}/${race.roundNumber}`)}
+                        <Button onClick={() => navigate(`/${race.year}/${race.roundNumber}`)}
                                 className="w-full">
                             View Race
                         </Button>

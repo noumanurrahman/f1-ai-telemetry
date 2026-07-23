@@ -18,6 +18,10 @@ export const dataService = {
         const response = await apiClient.get(`/races/${year}/${round}/drivers`);
         return response.data;
     },
+    driver: async (year: number, round: number, driverCode: string): Promise<Driver> => {
+        const response = await apiClient.get(`/races/${year}/${round}/${driverCode}`);
+        return response.data;
+    },
     result: async (year: number, round: number) => {
         const response = await apiClient.get(`/races/${year}/${round}/result`);
         return response.data;

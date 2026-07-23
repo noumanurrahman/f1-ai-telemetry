@@ -98,12 +98,38 @@ def read_drivers(year: int, round_number: int):
     return drivers_json
 
 
+@app.get("/races/{year}/{round_number}/{driver_code}")
+def read_driver(year: int, round_number: int, driver_code: str):
+    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    if not race:
+        return {"error": "Race not found"}
+    driver = RaceEntry.get_or_none((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code))
+    if not driver:
+        return {"error": "Driver not found"}
+    return {
+        "firstName": driver.first_name,
+        "lastName": driver.last_name,
+        "fullName": driver.full_name,
+        "driverNumber": driver.driver_number,
+        "driverCode": driver.driver_code,
+        "teamName": driver.team_name,
+        "headshotUrl": driver.headshot_url,
+        "points": driver.points,
+        "status": driver.status,
+        "finishPosition": driver.finish_position,
+        "gridPosition": driver.grid_position,
+        "classifiedPosition": driver.classified_position,
+    }
+
+
 @app.get("/races/{year}/{round_number}/{driver_code}/laps")
 def read_laps(year: int, round_number: int, driver_code: str):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    entry = RaceEntry.select().where((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code)).first()
+    entry = RaceEntry.get_or_none((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code))
+    if not entry:
+        return {"error": "Driver not found"}
     laps: list[Lap] = Lap.select().where(Lap.entry == entry).execute()
     laps_json = []
     for lap in laps:

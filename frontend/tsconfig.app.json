@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "rootDirs": [
+      ".",
+      "./.react-router/types"
+    ],
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",
     "lib": [
@@ -24,7 +28,6 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
@@ -32,6 +35,7 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    ".react-router/types/**/*"
   ]
 }

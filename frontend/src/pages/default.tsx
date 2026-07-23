@@ -1,0 +1,3 @@
+export default function Component() {
+    return <h1>404 NOT FOUND</h1>;
+}

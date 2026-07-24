@@ -7,7 +7,8 @@ import type {TelemetryPoint} from "@/src/api/types.ts";
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
     const laps = await dataService.lapsByDriver(Number(params.year), Number(params.round), params.driver);
-    return {driver, laps};
+    const fastest = laps.reduce((prev, curr) => (prev.lapTime < curr.lapTime ? prev : curr), laps[0]);
+    return {driver, laps, fastest};
 }
 
 export default function Component({loaderData, params}: Route.ComponentProps) {
@@ -30,6 +31,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
             <Button onClick={() => setCurrentLap((prev) => Math.min(loaderData.laps.length, prev + 1))}>
                 Next Lap
             </Button>
+            FASTEST: {loaderData.fastest.lapNumber} - {loaderData.fastest.lapTime}
             <Button onClick={loadTelemetry}>Load telemetry</Button>
             {telemetry.map((point) => (
                 <div key={point.time}>

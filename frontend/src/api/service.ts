@@ -1,5 +1,5 @@
 import apiClient from "@/src/api/client.ts";
-import type {Driver, Race, Season} from "@/src/api/types.ts";
+import type {Driver, Lap, Race, Season, TelemetryPoint} from "@/src/api/types.ts";
 
 export const dataService = {
     seasons: async (): Promise<Season[]> => {
@@ -26,15 +26,15 @@ export const dataService = {
         const response = await apiClient.get(`/races/${year}/${round}/result`);
         return response.data;
     },
-    lapsByDriver: async (year: number, round: number, driverCode: string) => {
+    lapsByDriver: async (year: number, round: number, driverCode: string): Promise<Lap[]> => {
         const response = await apiClient.get(`/races/${year}/${round}/${driverCode}/laps`);
         return response.data;
     },
-    lapsByLapNumber: async (year: number, round: number, lapNumber: number) => {
+    lapsByLapNumber: async (year: number, round: number, lapNumber: number): Promise<Lap[]> => {
         const response = await apiClient.get(`/races/${year}/${round}/laps/${lapNumber}`);
         return response.data;
     },
-    telemetry: async (year: number, round: number, lap: number, driver: string) => {
+    telemetry: async (year: number, round: number, lap: number, driver: string): Promise<TelemetryPoint[]> => {
         const response = await apiClient.get(`/races/${year}/${round}/${driver}/laps/${lap}/telemetry`);
         return response.data;
     }

@@ -3,6 +3,7 @@ import pandas as pd
 
 from db.models import Race, RaceEntry, Lap
 
+
 def main():
     grand_prix = input("Enter the Grand Prix: ")
     year = int(input("Enter the Year: "))
@@ -63,9 +64,9 @@ def insert_drivers(session, race: Race):
 def insert_laps(session, driver, race: Race):
     laps = session.laps.pick_drivers(driver)
     fastest = laps.pick_fastest()
-    print(fastest)
     final_laps = []
     for lap in laps.iterlaps():
+        top_speed = lap[1].get_telemetry()["Speed"].max()
         lap_info = lap[1]
         delta = pd.NaT
         if fastest is not None:
@@ -77,6 +78,7 @@ def insert_laps(session, driver, race: Race):
             sector1_seconds=lap_info["Sector1Time"].total_seconds() if lap_info["Sector1Time"] else None,
             sector2_seconds=lap_info["Sector2Time"].total_seconds() if lap_info["Sector2Time"] else None,
             sector3_seconds=lap_info["Sector3Time"].total_seconds() if lap_info["Sector3Time"] else None,
+            top_speed=top_speed,
             compound=lap_info["Compound"],
             tyre_life=lap_info["TyreLife"],
             fresh_tyre=lap_info["FreshTyre"],

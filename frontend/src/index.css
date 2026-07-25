@@ -27,6 +27,11 @@
     --chart-3: oklch(0.609 0.126 221.723);
     --chart-4: oklch(0.52 0.105 223.128);
     --chart-5: oklch(0.45 0.085 224.283);
+    --color-wet: var(--color-blue-300);
+    --color-intermediate: var(--color-green-300);
+    --color-soft: var(--color-red-300);
+    --color-medium: var(--color-yellow-300);
+    --color-hard: var(--color-gray-300);
     --sidebar: oklch(0.21 0.006 285.885);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.715 0.143 215.221);

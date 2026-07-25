@@ -2,29 +2,30 @@ import type {Route} from "./+types/dashboard"
 import {dataService} from "@/src/api/service.ts";
 import {useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
-import type {TelemetryPoint} from "@/src/api/types.ts";
-import {type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent} from "@/components/ui/chart.tsx";
-import {CartesianGrid, Line, LineChart, XAxis} from "recharts";
+import type {TelemetryPoint, TyreCompound} from "@/src/api/types.ts";
+import FastestSpeed from "@/components/charts/speed-fastest.tsx";
+import CompoundType from "@/components/charts/compound-pie.tsx";
+import {TopSpeedVsLapTimeChart} from "@/components/charts/top-speed-scatter.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
     const laps = await dataService.lapsByDriver(Number(params.year), Number(params.round), params.driver);
     const fastest = laps.reduce((prev, curr) => (prev.lapTime < curr.lapTime ? prev : curr), laps[0]);
-    console.log(fastest.lapNumber)
     const fastestTel = await dataService.telemetry(Number(params.year), Number(params.round), Number(fastest.lapNumber), params.driver);
-    return {driver, laps, fastest, fastestTel};
+    const compoundType: { name: TyreCompound, laps: number, fill: string }[] = [
+        {name: "SOFT", laps: laps.filter((lap) => lap.compound === "SOFT").length, fill: "var(--color-soft)"},
+        {name: "MEDIUM", laps: laps.filter((lap) => lap.compound === "MEDIUM").length, fill: "var(--color-medium)"},
+        {name: "HARD", laps: laps.filter((lap) => lap.compound === "HARD").length, fill: "var(--color-hard)"},
+        {
+            name: "INTERMEDIATE",
+            laps: laps.filter((lap) => lap.compound === "INTERMEDIATE").length,
+            fill: "var(--color-intermediate)"
+        },
+        {name: "WET", laps: laps.filter((lap) => lap.compound === "WET").length, fill: "var(--color-wet)"},
+    ]
+    return {driver, laps, fastest, fastestTel, compoundType};
 }
 
-const chartConfig = {
-    current: {
-        label: "Current Lap",
-        color: "#ffffff",
-    },
-    fastest: {
-        label: "Fastest Lap",
-        color: "#ffffff",
-    }
-} satisfies ChartConfig
 
 export default function Component({loaderData, params}: Route.ComponentProps) {
     const [currentLap, setCurrentLap] = useState(1)
@@ -48,49 +49,9 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
             </Button>
             FASTEST: {loaderData.fastest.lapNumber} - {loaderData.fastest.lapTime}
             <Button onClick={loadTelemetry}>Load telemetry</Button>
-            <ChartContainer config={chartConfig}>
-                <LineChart
-                    accessibilityLayer
-                    data={telemetry.map((point, index) => {
-                        return {
-                            time: point.time,
-                            current: point.speed,
-                            fastest: loaderData.fastestTel.at(index)?.speed
-                        }
-                    })}
-                    margin={{
-                        left: 12,
-                        right: 12,
-                    }}
-                >
-                    <CartesianGrid vertical={false}/>
-                    <XAxis
-                        dataKey="time"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        // tickFormatter={(value) => value.slice(0, 3)}
-                    />
-                    <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent hideLabel/>}
-                    />
-                    <Line
-                        dataKey="fastest"
-                        type="linear"
-                        stroke="var(--chart-4)"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-                    <Line
-                        dataKey="current"
-                        type="linear"
-                        stroke="var(--chart-1)"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-                </LineChart>
-            </ChartContainer>
+            <FastestSpeed telemetry={telemetry} fastest={loaderData.fastestTel}/>
+            <CompoundType chartData={loaderData.compoundType} totalLaps={loaderData.laps.length}/>
+            <TopSpeedVsLapTimeChart laps={}/>
             {telemetry.map((point) => (
                 <div key={point.time}>
                     <p>Speed: {point.speed}</p>

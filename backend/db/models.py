@@ -51,6 +51,7 @@ class Lap(BaseModel):
     sector1_seconds = pw.FloatField(null=True)
     sector2_seconds = pw.FloatField(null=True)
     sector3_seconds = pw.FloatField(null=True)
+    top_speed = pw.FloatField(null=True)
     compound = pw.CharField(null=True)  # SOFT / MEDIUM / HARD / INTERMEDIATE / WET
     tyre_life = pw.IntegerField(null=True)
     fresh_tyre = pw.BooleanField(null=True)

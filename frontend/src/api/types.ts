@@ -40,6 +40,7 @@ export type Lap = {
     sector1Time: number | null;
     sector2Time: number | null;
     sector3Time: number | null;
+    topSpeed: number | null;
     stint: number;
     tyreLife: number;
 };

@@ -1,4 +1,13 @@
-import {Bar, BarChart, type BarShapeProps, Rectangle, ReferenceLine, TooltipContentProps, XAxis, YAxis} from "recharts"
+import {
+    Bar,
+    BarChart,
+    type BarShapeProps,
+    Rectangle,
+    ReferenceLine,
+    type TooltipContentProps,
+    XAxis,
+    YAxis
+} from "recharts"
 import {type ChartConfig, ChartContainer, ChartTooltip} from "@/components/ui/chart"
 import type {Lap} from "@/src/api/types";
 
@@ -8,9 +17,6 @@ export interface SectorTimes {
     sector3: number
 }
 
-// Reference = the driver's session-average per sector. A lap can be faster OR
-// slower than its own average, so this is what actually produces a diverging
-// (two-directional) chart.
 export function getSessionAverageSectors(laps: Lap[]): SectorTimes {
     const n = laps.length
     return {
@@ -25,9 +31,6 @@ function renderDeltaBar(props: BarShapeProps) {
     return <Rectangle {...props} fill={fill} radius={4}/>
 }
 
-// Reference = the driver's session-best per sector. Every non-PB lap will
-// show as "slower" (never faster) — a one-directional "time lost" view
-// rather than a true diverging chart. Kept here in case that's what you want.
 export function getSessionBestSectors(laps: SectorTimes[]): SectorTimes {
     return {
         sector1: Math.min(...laps.map((l) => l.sector1)),
@@ -62,9 +65,6 @@ interface SectorDeltaChartProps {
     reference: SectorTimes
 }
 
-// Renders one lap's three sector deltas as diverging horizontal bars.
-// Meant to sit next to a lap row/selector — instantiate one per lap, not
-// one chart for the whole session.
 export function SectorDeltaChart({lap, reference}: SectorDeltaChartProps) {
     const data: SectorDeltaDatum[] = [
         {sector: "S1", delta: reference.sector1 - (lap.sector1Time ? lap.sector1Time : 0)},

@@ -42,9 +42,9 @@ coaching feedback on driver mistakes.
 
 **Frontend**
 
-- [ ] Season/race/session/driver selectors
-- [ ] Lap list view
-- [ ] Static telemetry charts (speed/throttle/brake)
+- [x] Season/race/session/driver selectors
+- [x] Lap list view
+- [x] Static telemetry charts (speed/throttle/brake)
 - [ ] Track map from X/Y telemetry
 - [ ] Client-side playback (fetch once, animate via `requestAnimationFrame`)
 - [ ] AI coaching feedback panel

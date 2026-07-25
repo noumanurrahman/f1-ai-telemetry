@@ -3,7 +3,6 @@ import pandas as pd
 
 from db.models import Race, RaceEntry, Lap
 
-
 def main():
     grand_prix = input("Enter the Grand Prix: ")
     year = int(input("Enter the Year: "))

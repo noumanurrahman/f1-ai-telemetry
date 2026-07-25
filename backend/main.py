@@ -1,4 +1,5 @@
 import fastf1
+import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +18,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def clean(value):
+    return None if pd.isna(value) else value
 
 
 @app.get("/")
@@ -41,7 +46,9 @@ def read_races(year: int):
 
 
 def get_races(year):
-    races: list[Race] = Race.select().where((Race.year == year) if year is not None else None).execute()
+    races: list[Race] = (
+        Race.select().where((Race.year == year) if year is not None else None).execute()
+    )
     races_json = []
     for race in races:
         races_json.append({
@@ -78,7 +85,9 @@ def read_drivers(year: int, round_number: int):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    drivers: list[RaceEntry] = RaceEntry.select().where(RaceEntry.race == race).execute()
+    drivers: list[RaceEntry] = (
+        RaceEntry.select().where(RaceEntry.race == race).execute()
+    )
     drivers_json = []
     for driver in drivers:
         drivers_json.append({
@@ -103,7 +112,9 @@ def read_driver(year: int, round_number: int, driver_code: str):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    driver = RaceEntry.get_or_none((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code))
+    driver = RaceEntry.get_or_none(
+        (RaceEntry.race == race) & (RaceEntry.driver_code == driver_code)
+    )
     if not driver:
         return {"error": "Driver not found"}
     return {
@@ -127,7 +138,9 @@ def read_laps(year: int, round_number: int, driver_code: str):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    entry = RaceEntry.get_or_none((RaceEntry.race == race) & (RaceEntry.driver_code == driver_code))
+    entry = RaceEntry.get_or_none(
+        (RaceEntry.race == race) & (RaceEntry.driver_code == driver_code)
+    )
     if not entry:
         return {"error": "Driver not found"}
     laps: list[Lap] = Lap.select().where(Lap.entry == entry).execute()
@@ -158,10 +171,17 @@ def read_laps_by_number(year: int, round_number: int, lap_number: int):
     race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
-    entries: list[RaceEntry] = RaceEntry.select().where(RaceEntry.race == race).execute()
+    entries: list[RaceEntry] = (
+        RaceEntry.select().where(RaceEntry.race == race).execute()
+    )
     laps = []
     for entry in entries:
-        lap: Lap = Lap.select().where((Lap.entry == entry) & (Lap.lap_number == lap_number)).first()
+        lap: Lap = (
+            Lap
+            .select()
+            .where((Lap.entry == entry) & (Lap.lap_number == lap_number))
+            .first()
+        )
         laps.append({
             "lapNumber": lap.lap_number,
             "lapTime": lap.lap_time_seconds,
@@ -199,22 +219,22 @@ def read_lap_telemetry(year: int, round_number: int, driver_code: str, lap_numbe
     for tel in telemetry.iterrows():
         info = tel[1]
         telemetry_json.append({
-            "date": info["Date"],
-            "sessionTime": info["SessionTime"],
-            "speed": info["Speed"],
-            "rpm": info["RPM"],
-            "gear": info["nGear"],
-            "throttle": info["Throttle"],
-            "brake": info["Brake"],
-            "drs": info["DRS"],
-            "driverAhead": info["DriverAhead"],
-            "distanceToDriverAhead": info["DistanceToDriverAhead"],
-            "time": info["Time"],
-            "distance": info["Distance"],
-            "relativeDistance": info["RelativeDistance"],
-            "x": info["X"],
-            "y": info["Y"],
-            "z": info["Z"],
+            "date": clean(info["Date"]),
+            "sessionTime": clean(info["SessionTime"]),
+            "speed": clean(info["Speed"]),
+            "rpm": clean(info["RPM"]),
+            "gear": clean(info["nGear"]),
+            "throttle": clean(info["Throttle"]),
+            "brake": clean(info["Brake"]),
+            "drs": clean(info["DRS"]),
+            "driverAhead": clean(info["DriverAhead"]),
+            "distanceToDriverAhead": clean(info["DistanceToDriverAhead"]),
+            "time": clean(info["Time"]),
+            "distance": clean(info["Distance"]),
+            "relativeDistance": clean(info["RelativeDistance"]),
+            "x": clean(info["X"]),
+            "y": clean(info["Y"]),
+            "z": clean(info["Z"]),
         })
     return telemetry_json
 

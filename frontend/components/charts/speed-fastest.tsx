@@ -6,11 +6,11 @@ import type {TelemetryPoint} from "@/src/api/types.ts";
 const chartConfig = {
     current: {
         label: "Current Lap",
-        color: "#ffffff",
+        color: "var(--color-green-400)",
     },
     fastest: {
         label: "Fastest Lap",
-        color: "#ffffff",
+        color: "var(--color-purple-400)",
     }
 } satisfies ChartConfig
 
@@ -22,8 +22,8 @@ export default function FastestSpeed({telemetry, fastest}: { telemetry: Telemetr
                 data={telemetry.map((point, index) => {
                     return {
                         time: point.time,
-                        current: point.speed,
-                        fastest: fastest.at(index)?.speed
+                        current: point.speed.toFixed(2),
+                        fastest: (fastest.at(index)?.speed ?? 0).toFixed(2)
                     }
                 })}
                 margin={{

@@ -21,7 +21,7 @@ export function getSessionAverageSectors(laps: Lap[]): SectorTimes {
 }
 
 function renderDeltaBar(props: BarShapeProps) {
-    const fill = (props.payload?.delta ?? 0) >= 0 ? "#43B02A" : "#DA291C"
+    const fill = (props.payload?.delta ?? 0) >= 0 ? "var(--color-green-400)" : "var(--color-red-400)"
     return <Rectangle {...props} fill={fill} radius={4}/>
 }
 

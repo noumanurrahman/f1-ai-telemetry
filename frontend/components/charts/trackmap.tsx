@@ -71,16 +71,11 @@ function buildTrack(telemetry: TelemetryPoint[]) {
     const yRange = yExtent[1] - yExtent[0]
     const drawSize = VIEWBOX_SIZE - PADDING * 2
 
-    // ONE scale factor applied to both axes (derived from whichever range is
-    // larger) — not independent x/y scales. Independent scales would stretch
-    // corners into ellipses instead of preserving the track's actual shape.
     const scale = drawSize / Math.max(xRange, yRange)
     const xOffset = (VIEWBOX_SIZE - xRange * scale) / 2
     const yOffset = (VIEWBOX_SIZE - yRange * scale) / 2
 
     const xScale = scaleLinear().domain(xExtent).range([xOffset, xOffset + xRange * scale])
-    // Y is flipped: telemetry coordinates increase "up" in track-space, but
-    // SVG's Y axis increases downward. Without this the map renders mirrored.
     const yScale = scaleLinear().domain(yExtent).range([yOffset + yRange * scale, yOffset])
 
     const project = (x: number, y: number): [number, number] => [xScale(x), yScale(y)]

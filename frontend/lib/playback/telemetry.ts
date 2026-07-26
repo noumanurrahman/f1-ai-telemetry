@@ -1,27 +1,15 @@
-// Suggested path: src/lib/playback/interpolate.ts
-// (this used to define its own TelemetrySample type — now imports your
-// existing TelemetryPoint instead, so just the interpolation logic lives here)
-
 import type {TelemetryPoint} from "@/src/api/types"
-
-// ^ adjust to wherever TelemetryPoint actually lives in your project
 
 function lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t
 }
 
-// date is an ISO string, not a number — interpolate it by converting to
-// epoch milliseconds, lerping that, then converting back.
 function lerpDate(a: string, b: string, ratio: number): string {
     const ta = new Date(a).getTime()
     const tb = new Date(b).getTime()
     return new Date(lerp(ta, tb, ratio)).toISOString()
 }
 
-// Assumes `samples` is sorted ascending by `time`, AND that `time` holds
-// seconds elapsed since LAP START (not session start — that's what
-// `sessionTime` looks like it's for). If it's actually the other way
-// around in your data, swap which field this function keys off of.
 function findBracketIndex(samples: TelemetryPoint[], t: number): number {
     if (t <= samples[0].time) return 0
     if (t >= samples[samples.length - 1].time) return samples.length - 2
@@ -36,8 +24,6 @@ function findBracketIndex(samples: TelemetryPoint[], t: number): number {
     return lo
 }
 
-// Returns a synthetic sample at time `t`, linearly interpolated between the
-// two real samples that bracket it.
 export function interpolateSample(samples: TelemetryPoint[], t: number): TelemetryPoint {
     const i = findBracketIndex(samples, t)
     const a = samples[i]
@@ -58,9 +44,6 @@ export function interpolateSample(samples: TelemetryPoint[], t: number): Telemet
         speed: lerp(a.speed, b.speed, ratio),
         throttle: lerp(a.throttle, b.throttle, ratio),
         rpm: lerp(a.rpm, b.rpm, ratio),
-        // Discrete/categorical values: snap to the earlier sample rather than
-        // interpolating — there's no meaningful "half-braking", "gear 3.4", or
-        // fractional DRS state, and driverAhead is a driver code, not a number.
         brake: a.brake,
         gear: a.gear,
         drs: a.drs,

@@ -35,7 +35,7 @@ export const dataService = {
         return response.data;
     },
     telemetry: async (year: number, round: number, lap: number, driver: string): Promise<TelemetryPoint[]> => {
-        const response = await apiClient.get(`/races/${year}/${round}/${driver}/laps/${lap}/telemetry`);
+        const response = await apiClient.get<TelemetryPoint[]>(`/races/${year}/${round}/${driver}/laps/${lap}/telemetry`);
         return response.data;
     }
 }

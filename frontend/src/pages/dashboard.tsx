@@ -8,6 +8,9 @@ import CompoundType from "@/components/charts/compound-pie.tsx";
 import {TopSpeedVsLapTimeChart} from "@/components/charts/top-speed-scatter.tsx";
 import {getSessionAverageSectors, SectorDeltaChart} from "@/components/charts/sector-delta.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
+import {LapPlaybackProvider} from "@/lib/playback/LapPlaybackProvider.tsx";
+import {TrackMap} from "@/components/charts/trackmap.tsx";
+import PlaybackControls from "@/components/playback-controls.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
@@ -39,11 +42,10 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
     const [currentLap, setCurrentLap] = useState(1)
     const [telemetry, setTelemetry] = useState<TelemetryPoint[]>(loaderData.telemetry)
 
-
     useEffect(() => {
         loadTelemetry(Number(params.year), Number(params.round), loaderData.driver.driverCode, Number(currentLap)).then((data) => {
             setTelemetry(data)
-        }).catch((err) => console.error("Error loading telemetry:", err))
+        })
     }, [currentLap])
 
     return (
@@ -61,21 +63,33 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                 </Button>
             </div>
             FASTEST: {loaderData.fastest.lapNumber} - {loaderData.fastest.lapTime}
-            <div className={"flex flex-row max-w-1/2 gap-4"}>
-                <Card className={"flex aspect-square align-center min-w-1/2"}>
-                    <CardContent className={"flex-1 pb-0 content-center"}>
-                        <CompoundType chartData={loaderData.compoundType} totalLaps={loaderData.laps.length}/>
-                    </CardContent>
-                </Card>
-                <Card className={"min-w-1/2 justify-center px-4"}>
-                    <SectorDeltaChart lap={loaderData.laps[currentLap - 1]}
-                                      reference={getSessionAverageSectors(loaderData.laps)}/>
-                </Card>
+            <div className={"flex flex-row min-w-full gap-4"}>
+                <div className={"flex flex-col gap-4 w-2/3"}>
+                    {telemetry.length > 0 ? (
+                        <FastestSpeed telemetry={telemetry} fastest={loaderData.fastestTel}/>
+                    ) : null}
+                    <TopSpeedVsLapTimeChart laps={loaderData.laps.filter((lap) => !lap.isPitLap && lap.isAccurate)}/>
+                </div>
+                <div className={"flex flex-col w-1/3 gap-4"}>
+                    <div className={"flex justify-center px-2 gap-4"}>
+                        <Card className={"flex aspect-square align-center justify-center min-w-1/2"}>
+                            <CardContent className={"flex-1 p-1 content-center"}>
+                                <CompoundType chartData={loaderData.compoundType} totalLaps={loaderData.laps.length}/>
+                            </CardContent>
+                        </Card>
+                        <Card className={"min-w-1/2 justify-center items-center px-4"}>
+                            <SectorDeltaChart lap={loaderData.laps[currentLap - 1]}
+                                              reference={getSessionAverageSectors(loaderData.laps)}/>
+                        </Card>
+                    </div>
+                    <Card className={"px-6 py-6 flex items-center justify-center"}>
+                        <LapPlaybackProvider key={currentLap} telemetry={telemetry}>
+                            <PlaybackControls/>
+                            <TrackMap referenceTelemetry={loaderData.fastestTel}/>
+                        </LapPlaybackProvider>
+                    </Card>
+                </div>
             </div>
-            {telemetry.length > 0 ? (
-                <FastestSpeed telemetry={telemetry} fastest={loaderData.fastestTel}/>
-            ) : null}
-            <TopSpeedVsLapTimeChart laps={loaderData.laps.filter((lap) => !lap.isPitLap && lap.isAccurate)}/>
         </section>
     )
 }

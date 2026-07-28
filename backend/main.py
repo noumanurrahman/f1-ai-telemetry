@@ -66,7 +66,8 @@ def get_races(year):
 
 @app.get("/races/{year}/{round_number}")
 def read_race(round_number: int, year: int):
-    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
     return {
@@ -82,7 +83,8 @@ def read_race(round_number: int, year: int):
 
 @app.get("/races/{year}/{round_number}/drivers")
 def read_drivers(year: int, round_number: int):
-    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
     drivers: list[RaceEntry] = (
@@ -109,7 +111,8 @@ def read_drivers(year: int, round_number: int):
 
 @app.get("/races/{year}/{round_number}/{driver_code}")
 def read_driver(year: int, round_number: int, driver_code: str):
-    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
     driver = RaceEntry.get_or_none(
@@ -135,7 +138,8 @@ def read_driver(year: int, round_number: int, driver_code: str):
 
 @app.get("/races/{year}/{round_number}/{driver_code}/laps")
 def read_laps(year: int, round_number: int, driver_code: str):
-    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
     entry = RaceEntry.get_or_none(
@@ -169,7 +173,8 @@ def read_laps(year: int, round_number: int, driver_code: str):
 
 @app.get("/races/{year}/{round_number}/laps/{lap_number}")
 def read_laps_by_number(year: int, round_number: int, lap_number: int):
-    race = Race.get_or_none((Race.round_number == round_number) & (Race.year == year))
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
     if not race:
         return {"error": "Race not found"}
     entries: list[RaceEntry] = (

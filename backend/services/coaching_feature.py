@@ -1,3 +1,5 @@
+import fastf1
+
 from db.models import Lap
 
 
@@ -62,4 +64,75 @@ def build_coaching_summary(deltas: dict, braking_zones: list[dict], corner_featu
         summary["corners"] = corner_features
     return summary
 
-# TODO: implement corner features extraction
+
+def get_session_and_corners(year: int, round_number: int):
+    session = fastf1.get_session(year, round_number, "R")
+    session.load()
+    corners = session.get_circuit_info().corners  # columns: Number, Letter, Angle, Distance, X, Y
+    return session, corners
+
+
+def _corner_id(corner_row) -> str:
+    letter = corner_row.get("Letter")
+    letter = letter if isinstance(letter, str) else ""
+    return f"{int(corner_row['Number'])}{letter}"
+
+
+def _apex_sample(telemetry, corner_distance: float, window_m: float = 60):
+    mask = (telemetry["Distance"] >= corner_distance - window_m) & \
+           (telemetry["Distance"] <= corner_distance + window_m)
+    window = telemetry[mask]
+    if window.empty:
+        return None
+    return window.loc[window["Speed"].idxmin()]
+
+
+def _throttle_reapplication_distance(telemetry, apex_distance: float, threshold: float = 95,
+                                     search_forward_m: float = 300):
+    forward = telemetry[
+        (telemetry["Distance"] >= apex_distance) &
+        (telemetry["Distance"] <= apex_distance + search_forward_m)
+        ]
+    hit = forward[forward["Throttle"] >= threshold]
+    return None if hit.empty else float(hit.iloc[0]["Distance"])
+
+
+def extract_corner_features(target_telemetry, reference_telemetry, corners) -> list[dict]:
+    features = []
+    for _, corner in corners.iterrows():
+        corner_distance = float(corner["Distance"])
+
+        target_apex = _apex_sample(target_telemetry, corner_distance)
+        ref_apex = _apex_sample(reference_telemetry, corner_distance)
+        if target_apex is None or ref_apex is None:
+            continue
+
+        target_throttle_pt = _throttle_reapplication_distance(target_telemetry, target_apex["Distance"])
+        ref_throttle_pt = _throttle_reapplication_distance(reference_telemetry, ref_apex["Distance"])
+
+        features.append({
+            "corner": _corner_id(corner),
+            "apex_speed_delta": round(target_apex["Speed"] - ref_apex["Speed"], 1),
+            "throttle_reapplication_delta_m": (
+                round(target_throttle_pt - ref_throttle_pt, 1)
+                if target_throttle_pt is not None and ref_throttle_pt is not None
+                else None
+            ),
+        })
+    return features
+
+
+def analyze_lap(year: int, round_number: int, driver_code: str, target_lap: Lap, reference_lap: Lap) -> dict:
+    session, corners = get_session_and_corners(year, round_number)
+    target_telemetry = get_lap_telemetry(session, driver_code, target_lap.lap_number)
+    reference_telemetry = get_lap_telemetry(session, driver_code, reference_lap.lap_number)
+
+    deltas = sector_deltas(target_lap, reference_lap)
+
+    target_zones = extract_braking_zones(target_telemetry)
+    reference_zones = extract_braking_zones(reference_telemetry)
+    braking = match_braking_zones(target_zones, reference_zones)
+
+    corner_features = extract_corner_features(target_telemetry, reference_telemetry, corners)
+
+    return build_coaching_summary(deltas, braking, corner_features)

@@ -1,9 +1,10 @@
 import fastf1
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.models import Race, RaceEntry, Lap
+from services.coaching_feature import analyze_lap
 
 origins = [
     "http://localhost:5173",
@@ -269,3 +270,68 @@ def read_race_results(round_number: int, year: int):
             "points": info["Points"],
         })
     return result_json
+
+
+@app.post("/analysis/{year}/{round_number}/{driver_code}/{lap_number}")
+def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_number: int):
+    race = Race.get_or_none(
+        (Race.round_number == round_number) & (Race.year == year))
+    if not race:
+        return {"error": "Race not found"}
+    entry = RaceEntry.get_or_none(
+        (RaceEntry.race == race) & (RaceEntry.driver_code == driver_code)
+    )
+    if not entry:
+        return {"error": "Driver not found"}
+
+    lap = Lap.get_or_none(
+        (Lap.entry == entry) & (Lap.lap_number == lap_number)
+    )
+    if lap is None:
+        raise HTTPException(status_code=404, detail="Lap not found")
+
+    # cached = AICoachingCache.get_or_none(AICoachingCache.lap == lap)
+    # if cached is not None:
+    #     return {
+    #         "lapId": lap.id,
+    #         "featureSummary": json.loads(cached.feature_summary_json),
+    #         "narrative": cached.narrative,
+    #         "cached": True,
+    #     }
+
+    entry: RaceEntry = lap.entry
+    race: Race = entry.race
+
+    reference_lap = (
+        Lap
+        .select()
+        .where((Lap.entry == entry) & (Lap.is_personal_best == True))
+        .first()
+    )
+    if reference_lap is None:
+        raise HTTPException(status_code=422, detail="No personal-best lap found to compare against")
+    if reference_lap.id == lap.id:
+        raise HTTPException(status_code=422,
+                            detail="This lap is already this driver's fastest lap this session — nothing to compare it to")
+
+    try:
+        summary = analyze_lap(
+            year=race.year,
+            round_number=race.round_number,
+            driver_code=entry.driver_code,
+            target_lap=lap,
+            reference_lap=reference_lap,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Telemetry analysis failed: {exc}")
+
+    # Claude narrative call intentionally NOT wired in here yet — that's a
+    # separate, paid step (README: "Claude API integration for narrative
+    # feedback"). Returning the feature summary now so you can sanity-check
+    # the numbers before spending anything on it.
+    return {
+        "lapId": lap.id,
+        "featureSummary": summary,
+        "narrative": None,
+        "cached": False,
+    }

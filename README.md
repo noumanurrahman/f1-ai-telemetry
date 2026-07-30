@@ -36,8 +36,8 @@ coaching feedback on driver mistakes.
 
 **AI**
 
-- [ ] Feature extraction (braking, throttle, corner speed, sector deltas vs. reference lap)
-- [ ] Structured summary builder
+- [x] Feature extraction (braking, throttle, corner speed, sector deltas vs. reference lap)
+- [x] Structured summary builder
 - [ ] Claude API integration for narrative feedback
 - [ ] Cache results in SQLite (`ai_coaching_cache`)
 - [ ] Fallback UI state if AI call fails

@@ -290,6 +290,7 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     if lap is None:
         raise HTTPException(status_code=404, detail="Lap not found")
 
+    # TODO: implement caching system
     # cached = AICoachingCache.get_or_none(AICoachingCache.lap == lap)
     # if cached is not None:
     #     return {
@@ -325,6 +326,7 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Telemetry analysis failed: {exc}")
 
+    # TODO: use Claude or OpenAI's api for analysis
     # Claude narrative call intentionally NOT wired in here yet — that's a
     # separate, paid step (README: "Claude API integration for narrative
     # feedback"). Returning the feature summary now so you can sanity-check

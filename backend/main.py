@@ -1,9 +1,11 @@
+import json
+
 import fastf1
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from db.models import Race, RaceEntry, Lap
+from db.models import Race, RaceEntry, Lap, AICoachingCache
 from services.coaching_feature import analyze_lap
 from services.openai_coaching import generate_narrative
 
@@ -292,14 +294,14 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
         raise HTTPException(status_code=404, detail="Lap not found")
 
     # TODO: implement caching system
-    # cached = AICoachingCache.get_or_none(AICoachingCache.lap == lap)
-    # if cached is not None:
-    #     return {
-    #         "lapId": lap.id,
-    #         "featureSummary": json.loads(cached.feature_summary_json),
-    #         "narrative": cached.narrative,
-    #         "cached": True,
-    #     }
+    cached = AICoachingCache.get_or_none(AICoachingCache.lap == lap)
+    if cached is not None:
+        return {
+            "lapNumber": lap.lap_number,
+            "featureSummary": json.loads(cached.feature_summary_json),
+            "narrative": cached.narrative,
+            "cached": True,
+        }
 
     entry: RaceEntry = lap.entry
     race: Race = entry.race
@@ -312,7 +314,7 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     )
     if reference_lap is None:
         raise HTTPException(status_code=422, detail="No personal-best lap found to compare against")
-    if reference_lap.id == lap.id:
+    if reference_lap.lap_number == lap.lap_number:
         raise HTTPException(status_code=422,
                             detail="This lap is already this driver's fastest lap this session — nothing to compare it to")
 
@@ -330,20 +332,24 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     try:
         narrative = generate_narrative(summary)
     except Exception as exc:
-        # OpenAI call is the one step that costs money AND can fail on us —
-        # return the (free) feature summary anyway rather than losing that
-        # work. This is the README's "fallback UI state" item.
         return {
-            "lapId": lap.id,
+            "lapNumber": lap.lap_number,
             "featureSummary": summary,
             "narrative": None,
             "error": f"Narrative generation failed: {exc}",
             "cached": False,
         }
 
+    AICoachingCache.create(
+        lap=lap,
+        feature_summary_json=json.dumps(summary),
+        openai_model="gpt-5.4-mini",
+        narrative=narrative
+    )
+
     return {
-        "lapId": lap.id,
+        "lapNumber": lap.lap_number,
         "featureSummary": summary,
-        "narrative": None,
+        "narrative": narrative,
         "cached": False,
     }

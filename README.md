@@ -12,8 +12,8 @@ coaching feedback on driver mistakes.
 - **Data:** FastF1 (Python)
 - **Backend:** Python, FastAPI
 - **Database:** SQLite via peewee
-- **AI:** Claude API (feature extraction + narrative coaching)
-- **Frontend:** React + Vite, built to static files, served by FastAPI
+- **AI:** OpenAI API (narrative coaching)
+- **Frontend:** React + Vite, served by FastAPI
 - **Hosting:** one DigitalOcean droplet
 
 ## V1 Tasks
@@ -31,14 +31,14 @@ coaching feedback on driver mistakes.
 - [x] `GET /seasons`, `/races`, `/drivers`, `/laps`
 - [x] `GET /races/{id}/laps/{id}/telemetry`
 - [x] `GET /races/{id}/results`
-- [ ] `POST /analysis/{lap_id}`
+- [x] `POST /analysis/{lap_id}`
 - [x] Basic error handling
 
 **AI**
 
 - [x] Feature extraction (braking, throttle, corner speed, sector deltas vs. reference lap)
 - [x] Structured summary builder
-- [ ] Claude API integration for narrative feedback
+- [x] OpenAI API integration for narrative feedback
 - [ ] Cache results in SQLite (`ai_coaching_cache`)
 - [ ] Fallback UI state if AI call fails
 

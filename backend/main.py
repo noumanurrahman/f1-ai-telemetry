@@ -330,7 +330,7 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     try:
         narrative = generate_narrative(summary)
     except Exception as exc:
-        # Claude call is the one step that costs money AND can fail on us —
+        # OpenAI call is the one step that costs money AND can fail on us —
         # return the (free) feature summary anyway rather than losing that
         # work. This is the README's "fallback UI state" item.
         return {

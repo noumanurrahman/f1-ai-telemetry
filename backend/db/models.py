@@ -66,9 +66,9 @@ class Lap(BaseModel):
 
 class AICoachingCache(BaseModel):
     lap = pw.ForeignKeyField(Lap, backref="coaching", unique=True, on_delete="CASCADE")
-    feature_summary_json = pw.TextField()  # structured features sent to Claude - never raw telemetry
-    narrative = pw.TextField()  # Claude's generated coaching text
-    claude_model = pw.CharField()  # e.g. "claude-sonnet-4-6" - for your own reference
+    feature_summary_json = pw.TextField()  # structured features sent to OpenAI - never raw telemetry
+    narrative = pw.TextField()  # OpenAI's generated coaching text
+    openai_model = pw.CharField()  # e.g. "gpt-5.4-mini" - for your own reference
     created_at = pw.DateTimeField(default=datetime.datetime.utcnow)
 
     class Meta:

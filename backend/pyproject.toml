@@ -6,7 +6,8 @@ requires-python = ">=3.11"
 dependencies = [
     "fastf1",
     "peewee",
-    "fastapi[standard]"
+    "fastapi[standard]",
+    "openai"
 ]
 
 [build-system]

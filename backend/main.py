@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db.models import Race, RaceEntry, Lap
 from services.coaching_feature import analyze_lap
+from services.openai_coaching import generate_narrative
 
 origins = [
     "http://localhost:5173",
@@ -326,11 +327,20 @@ def create_lap_analysis(year: int, round_number: int, driver_code: str, lap_numb
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Telemetry analysis failed: {exc}")
 
-    # TODO: use Claude or OpenAI's api for analysis
-    # Claude narrative call intentionally NOT wired in here yet — that's a
-    # separate, paid step (README: "Claude API integration for narrative
-    # feedback"). Returning the feature summary now so you can sanity-check
-    # the numbers before spending anything on it.
+    try:
+        narrative = generate_narrative(summary)
+    except Exception as exc:
+        # Claude call is the one step that costs money AND can fail on us —
+        # return the (free) feature summary anyway rather than losing that
+        # work. This is the README's "fallback UI state" item.
+        return {
+            "lapId": lap.id,
+            "featureSummary": summary,
+            "narrative": None,
+            "error": f"Narrative generation failed: {exc}",
+            "cached": False,
+        }
+
     return {
         "lapId": lap.id,
         "featureSummary": summary,

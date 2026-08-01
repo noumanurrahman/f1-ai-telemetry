@@ -40,7 +40,7 @@ coaching feedback on driver mistakes.
 - [x] Structured summary builder
 - [x] OpenAI API integration for narrative feedback
 - [x] Cache results in SQLite (`ai_coaching_cache`)
-- [ ] Fallback UI state if AI call fails
+- [x] Fallback UI state if AI call fails
 
 **Frontend**
 
@@ -50,7 +50,7 @@ coaching feedback on driver mistakes.
 - [x] Track map from X/Y telemetry
 - [x] Client-side playback (fetch once, animate via `requestAnimationFrame`)
 - [ ] AI coaching feedback panel
-- [ ] Loading/error states
+- [x] Loading/error states
 
 **Deploy**
 
@@ -61,6 +61,6 @@ coaching feedback on driver mistakes.
 ## Status
 
 - Planning complete.
-- Backend's basics implemented.
-- Frontend skeleton in place.
+- Backend implemented.
+- Frontend almost completed.
 - AI integration pending.

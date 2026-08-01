@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from "react-router";
+import {InlineLoading, RouteErrorBoundary} from "@/components/page-states.tsx";
 
 export function Layout({ children }: { children: ReactNode }) {
     return (
@@ -24,5 +25,21 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function Root() {
-    return <Outlet />;
+    const navigation = useNavigation();
+    const isNavigating = navigation.state !== "idle";
+
+    return (
+        <>
+            {isNavigating ? (
+                <div className="mb-4">
+                    <InlineLoading label="Loading page..."/>
+                </div>
+            ) : null}
+            <Outlet/>
+        </>
+    );
+}
+
+export function ErrorBoundary() {
+    return <RouteErrorBoundary/>;
 }

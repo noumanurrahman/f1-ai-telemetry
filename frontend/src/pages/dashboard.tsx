@@ -1,6 +1,6 @@
 import type {Route} from "./+types/dashboard"
 import {dataService} from "@/src/api/service.ts";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
 import type {TelemetryPoint, TyreCompound} from "@/src/api/types.ts";
 import FastestSpeed from "@/components/charts/speed-fastest.tsx";
@@ -15,10 +15,14 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
+import {InlineError, InlineLoading, RouteErrorBoundary} from "@/components/page-states.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
     const laps = await dataService.lapsByDriver(Number(params.year), Number(params.round), params.driver);
+    if (laps.length === 0) {
+        throw new Error(`No laps available for ${params.driver} in this race`);
+    }
     const fastest = laps.filter((lap) => lap.lapTime != null && lap.isPersonalBest).reduce((prev, curr) => (prev.lapTime < curr.lapTime ? prev : curr), laps[0]);
     const fastestTel = await dataService.telemetry(Number(params.year), Number(params.round), Number(fastest.lapNumber), params.driver);
     const compoundType: { name: TyreCompound, laps: number, fill: string }[] = [
@@ -45,13 +49,35 @@ async function loadTelemetry(year: number, round: number, driver: string, lapNum
 export default function Component({loaderData, params}: Route.ComponentProps) {
     const [currentLap, setCurrentLap] = useState(1)
     const [telemetry, setTelemetry] = useState<TelemetryPoint[]>(loaderData.telemetry)
+    const [isLoadingTelemetry, setIsLoadingTelemetry] = useState(false);
+    const [telemetryError, setTelemetryError] = useState<string | null>(null);
+    const didMount = useRef(false);
     const selectedLap = loaderData.laps.at(currentLap - 1);
 
+    const fetchLapTelemetry = (lapNumber: number) => {
+        setIsLoadingTelemetry(true);
+        setTelemetryError(null);
+        return loadTelemetry(Number(params.year), Number(params.round), loaderData.driver.driverCode, lapNumber)
+            .then((data) => {
+                setTelemetry(data);
+            })
+            .catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : "Failed to load telemetry";
+                setTelemetryError(message);
+                setTelemetry([]);
+            })
+            .finally(() => {
+                setIsLoadingTelemetry(false);
+            });
+    };
+
     useEffect(() => {
-        loadTelemetry(Number(params.year), Number(params.round), loaderData.driver.driverCode, Number(currentLap)).then((data) => {
-            setTelemetry(data)
-        })
-    }, [currentLap])
+        if (!didMount.current) {
+            didMount.current = true;
+            return;
+        }
+        void fetchLapTelemetry(currentLap);
+    }, [currentLap]);
 
     const averageSectors = useMemo(() => getSessionAverageSectors(loaderData.laps), [loaderData.laps]);
 
@@ -122,6 +148,9 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                     </Button>
                 </CardContent>
             </Card>
+
+            {isLoadingTelemetry ? <InlineLoading label="Loading lap telemetry..."/> : null}
+            {telemetryError ? <InlineError message={telemetryError} onRetry={() => void fetchLapTelemetry(currentLap)}/> : null}
 
             <Separator/>
 
@@ -226,4 +255,8 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
             </Card>
         </section>
     )
+}
+
+export function ErrorBoundary() {
+    return <RouteErrorBoundary/>;
 }

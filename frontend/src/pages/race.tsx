@@ -7,6 +7,7 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState} from "react";
 import {Separator} from "@/components/ui/separator.tsx";
+import {RouteErrorBoundary} from "@/components/page-states.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const drivers = await dataService.drivers(Number(params.year), Number(params.round));
@@ -81,6 +82,13 @@ export default function Component({loaderData}: Route.ComponentProps) {
                     </Card>
                 ))}
             </div>
+            {filteredDrivers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No drivers matched your filter.</p>
+            ) : null}
         </section>
     )
+}
+
+export function ErrorBoundary() {
+    return <RouteErrorBoundary/>;
 }

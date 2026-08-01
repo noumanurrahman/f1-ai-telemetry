@@ -12,8 +12,10 @@ export function Layout({ children }: { children: ReactNode }) {
                 <Links />
                 <title>F1 AI Telemetry</title>
             </head>
-            <body id="root" className="dark px-12 py-4">
-                {children}
+            <body id="root" className="dark min-h-screen bg-background">
+                <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8">
+                    {children}
+                </main>
                 <ScrollRestoration />
                 <Scripts />
             </body>

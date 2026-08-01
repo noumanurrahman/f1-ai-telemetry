@@ -1,6 +1,7 @@
 import {useLapPlayback} from "@/lib/playback/LapPlaybackProvider"
 import React from "react";
 import {Button} from "./ui/button";
+import {Badge} from "@/components/ui/badge.tsx";
 
 export default function PlaybackControls(): React.JSX.Element {
     const {
@@ -17,7 +18,7 @@ export default function PlaybackControls(): React.JSX.Element {
     }
 
     return (
-        <div className="flex gap-2 items-center">
+        <div className="mb-4 flex flex-wrap gap-2 items-center">
             <Button onClick={isPlaying ? pause : play}>
                 {isPlaying ? "Pause" : "Play"}
             </Button>
@@ -33,6 +34,8 @@ export default function PlaybackControls(): React.JSX.Element {
             <Button variant={"outline"} onClick={() => setPlaybackRate(2)}>
                 2x
             </Button>
+
+            <Badge variant="outline">{isPlaying ? "Playing" : "Paused"}</Badge>
         </div>
     )
 }

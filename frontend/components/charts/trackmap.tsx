@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef} from "react"
-import {line as d3Line} from "d3-shape"
+import {curveCatmullRom, line as d3Line} from "d3-shape"
 import {scaleLinear} from "d3-scale"
 import {useLapPlayback} from "@/lib/playback/LapPlaybackProvider"
 import type {TelemetryPoint} from "@/src/api/types"
@@ -27,6 +27,14 @@ export function TrackMap({referenceTelemetry}: TrackMapProps) {
     )
 
     useEffect(() => {
+        const node = markerRef.current
+        if (!node || referenceTelemetry.length === 0) return
+        const [x, y] = project(referenceTelemetry[0].x, referenceTelemetry[0].y)
+        node.setAttribute("cx", x.toFixed(2))
+        node.setAttribute("cy", y.toFixed(2))
+    }, [project, referenceTelemetry])
+
+    useEffect(() => {
         return subscribe((sample) => {
             const node = markerRef.current
             if (!node) return
@@ -39,25 +47,53 @@ export function TrackMap({referenceTelemetry}: TrackMapProps) {
     }, [subscribe, project])
 
     return (
-        <svg
-            viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
-            className="h-auto w-full"
-        >
-            <path
-                d={pathData}
-                fill="none"
-                stroke="var(--ring)"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
+        <div
+            className="mx-auto w-full max-w-[560px] rounded-xl border border-border/60 p-3 sm:p-4">
+            <svg
+                viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+                className="aspect-square h-auto w-full rounded-lg"
+                aria-label="Track map with live playback marker"
+                role="img"
+            >
+                <defs>
+                    <filter id="markerGlow" x="-120%" y="-120%" width="340%" height="340%">
+                        <feGaussianBlur stdDeviation="2.6" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <linearGradient id="trackStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="var(--color-border)"/>
+                        <stop offset="100%" stopColor="var(--color-border)"/>
+                    </linearGradient>
+                </defs>
 
-            <circle
-                ref={markerRef}
-                r={5}
-                fill={"var(--color-chart-2)"}
-            />
-        </svg>
+                <path
+                    d={pathData}
+                    fill="none"
+                    stroke="var(--color-muted)"
+                    strokeOpacity={0.45}
+                    strokeWidth={8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d={pathData}
+                    fill="none"
+                    stroke="url(#trackStroke)"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                <circle
+                    ref={markerRef}
+                    r={5}
+                    fill="var(--color-chart-2)"
+                />
+            </svg>
+        </div>
     )
 }
 
@@ -81,6 +117,7 @@ function buildTrack(telemetry: TelemetryPoint[]) {
     const project = (x: number, y: number): [number, number] => [xScale(x), yScale(y)]
 
     const generateLine = d3Line<TelemetryPoint>()
+        .curve(curveCatmullRom.alpha(0.6))
         .x((s) => project(s.x, s.y)[0])
         .y((s) => project(s.x, s.y)[1])
 

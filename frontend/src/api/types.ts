@@ -63,3 +63,35 @@ export type TelemetryPoint = {
     y: number;
     z: number;
 };
+
+export type CoachingSectorDeltas = {
+    s1_delta_s: number;
+    s2_delta_s: number;
+    s3_delta_s: number;
+};
+
+export type CoachingBrakingZone = {
+    zone: number;
+    delta_m: number | null;
+};
+
+export type CoachingCornerFeature = {
+    corner: string;
+    apex_speed_delta: number;
+    throttle_reapplication_delta_m: number | null;
+};
+
+export type CoachingFeatureSummary = {
+    lap_time_delta_s: number;
+    sectors: CoachingSectorDeltas;
+    braking_zones: CoachingBrakingZone[];
+    corners?: CoachingCornerFeature[];
+};
+
+export type LapCoachingResponse = {
+    lapNumber: number;
+    featureSummary: CoachingFeatureSummary;
+    narrative: string | null;
+    cached: boolean;
+    error?: string;
+};

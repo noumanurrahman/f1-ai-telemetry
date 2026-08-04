@@ -49,7 +49,7 @@ coaching feedback on driver mistakes.
 - [x] Static telemetry charts (speed/throttle/brake)
 - [x] Track map from X/Y telemetry
 - [x] Client-side playback (fetch once, animate via `requestAnimationFrame`)
-- [ ] AI coaching feedback panel
+- [x] AI coaching feedback panel
 - [x] Loading/error states
 
 **Deploy**

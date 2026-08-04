@@ -2,7 +2,7 @@ import type {Route} from "./+types/dashboard"
 import {dataService} from "@/src/api/service.ts";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
-import type {TelemetryPoint, TyreCompound} from "@/src/api/types.ts";
+import type {LapCoachingResponse, TelemetryPoint, TyreCompound} from "@/src/api/types.ts";
 import FastestSpeed from "@/components/charts/speed-fastest.tsx";
 import CompoundType from "@/components/charts/compound-pie.tsx";
 import {TopSpeedVsLapTimeChart} from "@/components/charts/top-speed-scatter.tsx";
@@ -16,6 +16,7 @@ import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVal
 import {Separator} from "@/components/ui/separator.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
 import {InlineError, InlineLoading, RouteErrorBoundary} from "@/components/page-states.tsx";
+import {mockAnalyzeLap} from "@/src/mocks/coaching.ts";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
@@ -51,6 +52,9 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
     const [telemetry, setTelemetry] = useState<TelemetryPoint[]>(loaderData.telemetry)
     const [isLoadingTelemetry, setIsLoadingTelemetry] = useState(false);
     const [telemetryError, setTelemetryError] = useState<string | null>(null);
+    const [coaching, setCoaching] = useState<LapCoachingResponse | null>(null);
+    const [isGeneratingCoaching, setIsGeneratingCoaching] = useState(false);
+    const [coachingError, setCoachingError] = useState<string | null>(null);
     const didMount = useRef(false);
     const selectedLap = loaderData.laps.at(currentLap - 1);
 
@@ -80,6 +84,33 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
     }, [currentLap]);
 
     const averageSectors = useMemo(() => getSessionAverageSectors(loaderData.laps), [loaderData.laps]);
+    const selectedLapDelta = selectedLap && loaderData.fastest.lapTime
+        ? selectedLap.lapTime - loaderData.fastest.lapTime
+        : 0;
+
+    const generateCoaching = () => {
+        if (!selectedLap) {
+            return;
+        }
+        setIsGeneratingCoaching(true);
+        setCoachingError(null);
+        return mockAnalyzeLap({
+            lapNumber: selectedLap.lapNumber,
+            fastestLapNumber: loaderData.fastest.lapNumber,
+            baselineLapTimeDelta: selectedLapDelta,
+        })
+            .then((payload) => {
+                setCoaching(payload);
+            })
+            .catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : "Failed to generate analysis";
+                setCoachingError(message);
+                setCoaching(null);
+            })
+            .finally(() => {
+                setIsGeneratingCoaching(false);
+            });
+    };
 
     return (
         <section className="space-y-6">
@@ -150,7 +181,8 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
             </Card>
 
             {isLoadingTelemetry ? <InlineLoading label="Loading lap telemetry..."/> : null}
-            {telemetryError ? <InlineError message={telemetryError} onRetry={() => void fetchLapTelemetry(currentLap)}/> : null}
+            {telemetryError ?
+                <InlineError message={telemetryError} onRetry={() => void fetchLapTelemetry(currentLap)}/> : null}
 
             <Separator/>
 
@@ -180,6 +212,40 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                                 laps={loaderData.laps.filter((lap) => !lap.isPitLap && lap.isAccurate)}/>
                         </CardContent>
                     </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Lap Table</CardTitle>
+                            <CardDescription>Quick lap-by-lap summary for this driver.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Lap</TableHead>
+                                        <TableHead>Time (s)</TableHead>
+                                        <TableHead>Compound</TableHead>
+                                        <TableHead>Top Speed</TableHead>
+                                        <TableHead>Pit</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {loaderData.laps.map((lap) => (
+                                        <TableRow
+                                            key={lap.lapNumber}
+                                            className={lap.lapNumber === currentLap ? "bg-muted/40" : undefined}
+                                            onClick={() => setCurrentLap(lap.lapNumber)}
+                                        >
+                                            <TableCell>{lap.lapNumber}</TableCell>
+                                            <TableCell>{lap.lapTime?.toFixed(3)}</TableCell>
+                                            <TableCell>{lap.compound}</TableCell>
+                                            <TableCell>{lap.topSpeed ?? "—"}</TableCell>
+                                            <TableCell>{lap.isPitLap ? "Yes" : "No"}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <div className="space-y-4">
@@ -206,6 +272,108 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                         </Card>
                     </div>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>AI Coaching</CardTitle>
+                            <CardDescription>
+                                Placeholder mode using backend-compatible analysis shape. OpenAI call is not wired yet.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant="outline">Lap {selectedLap?.lapNumber ?? "—"}</Badge>
+                                <Badge variant="secondary">Fastest: Lap {loaderData.fastest.lapNumber}</Badge>
+                                {coaching?.cached ? <Badge variant="secondary">Cached</Badge> : null}
+                            </div>
+
+                            <Button
+                                className="w-full"
+                                onClick={() => void generateCoaching()}
+                                disabled={isGeneratingCoaching || !selectedLap}
+                            >
+                                {isGeneratingCoaching ? "Generating Coaching..." : "Generate Coaching Insights"}
+                            </Button>
+
+                            {isGeneratingCoaching ? <InlineLoading label="Generating AI coaching..."/> : null}
+                            {coachingError ?
+                                <InlineError message={coachingError} onRetry={() => void generateCoaching()}/> : null}
+
+                            {coaching ? (
+                                <div className="space-y-4 text-sm">
+                                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                                        <p className="text-xs text-muted-foreground">Lap Time Delta</p>
+                                        <p className={coaching.featureSummary.lap_time_delta_s <= 0 ? "text-emerald-400" : "text-red-400"}>
+                                            {coaching.featureSummary.lap_time_delta_s > 0 ? "+" : ""}
+                                            {coaching.featureSummary.lap_time_delta_s.toFixed(3)}s
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Sector Deltas</p>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                ["S1", coaching.featureSummary.sectors.s1_delta_s],
+                                                ["S2", coaching.featureSummary.sectors.s2_delta_s],
+                                                ["S3", coaching.featureSummary.sectors.s3_delta_s],
+                                            ].map(([sector, value]) => (
+                                                <div key={sector} className="rounded-md border border-border/60 p-2">
+                                                    <p className="text-xs text-muted-foreground">{sector}</p>
+                                                    <p className={Number(value) <= 0 ? "text-emerald-400" : "text-red-400"}>
+                                                        {Number(value) > 0 ? "+" : ""}{Number(value).toFixed(3)}s
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Braking Zones (delta m)</p>
+                                        <div className="space-y-1">
+                                            {coaching.featureSummary.braking_zones.map((zone) => (
+                                                <div key={zone.zone}
+                                                     className="flex items-center justify-between rounded-md border border-border/50 px-2 py-1.5">
+                                                    <span>Zone {zone.zone}</span>
+                                                    <span
+                                                        className={zone.delta_m !== null && zone.delta_m <= 0 ? "text-emerald-400" : "text-red-400"}>
+                                                        {zone.delta_m === null ? "—" : `${zone.delta_m > 0 ? "+" : ""}${zone.delta_m.toFixed(1)}m`}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {coaching.featureSummary.corners && coaching.featureSummary.corners.length > 0 ? (
+                                        <div className="space-y-2">
+                                            <p className="text-xs text-muted-foreground">Corner Highlights</p>
+                                            <div className="space-y-1">
+                                                {coaching.featureSummary.corners.slice(0, 4).map((corner) => (
+                                                    <div key={corner.corner}
+                                                         className="rounded-md border border-border/50 px-2 py-1.5">
+                                                        <p className="font-medium">Turn {corner.corner}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Apex
+                                                            Δ {corner.apex_speed_delta > 0 ? "+" : ""}{corner.apex_speed_delta.toFixed(1)} km/h
+                                                            •
+                                                            Throttle reapply
+                                                            Δ {corner.throttle_reapplication_delta_m == null
+                                                            ? " —"
+                                                            : ` ${corner.throttle_reapplication_delta_m > 0 ? "+" : ""}${corner.throttle_reapplication_delta_m.toFixed(1)}m`}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : null}
+
+                                    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                                        <p className="mb-2 text-xs text-muted-foreground">Narrative Coaching</p>
+                                        <p className="whitespace-pre-line text-sm text-foreground/90">{coaching.narrative ?? "Narrative unavailable."}</p>
+                                    </div>
+                                </div>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+
                     <Card className="px-6 py-6">
                         <CardHeader className="px-0">
                             <CardTitle>Track Map Playback</CardTitle>
@@ -219,40 +387,6 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Lap Table</CardTitle>
-                    <CardDescription>Quick lap-by-lap summary for this driver.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Lap</TableHead>
-                                <TableHead>Time (s)</TableHead>
-                                <TableHead>Compound</TableHead>
-                                <TableHead>Top Speed</TableHead>
-                                <TableHead>Pit</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loaderData.laps.map((lap) => (
-                                <TableRow
-                                    key={lap.lapNumber}
-                                    className={lap.lapNumber === currentLap ? "bg-muted/40" : undefined}
-                                    onClick={() => setCurrentLap(lap.lapNumber)}
-                                >
-                                    <TableCell>{lap.lapNumber}</TableCell>
-                                    <TableCell>{lap.lapTime?.toFixed(3)}</TableCell>
-                                    <TableCell>{lap.compound}</TableCell>
-                                    <TableCell>{lap.topSpeed ?? "—"}</TableCell>
-                                    <TableCell>{lap.isPitLap ? "Yes" : "No"}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
         </section>
     )
 }

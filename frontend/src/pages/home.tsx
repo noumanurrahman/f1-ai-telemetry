@@ -68,9 +68,10 @@ export default function Component({loaderData}: Route.ComponentProps) {
 
     return (
         <section className="space-y-6">
-            <Card>
+            <Card className="overflow-hidden">
+                <div className="h-1 w-full bg-gradient-to-r from-chart-5 via-chart-3 to-chart-2"/>
                 <CardHeader>
-                    <CardTitle>F1 AI Telemetry</CardTitle>
+                    <CardTitle className="text-xl md:text-2xl">F1 AI Telemetry</CardTitle>
                     <CardDescription>Select a season and open a race to explore driver telemetry dashboards.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-3 md:grid-cols-[220px_1fr]">
@@ -108,7 +109,7 @@ export default function Component({loaderData}: Route.ComponentProps) {
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filteredRaces.map((race) => (
-                    <Card key={race.roundNumber}>
+                    <Card key={race.roundNumber} className="transition-transform duration-200 hover:-translate-y-0.5">
                     <CardHeader>
                         <CardAction>
                             <Badge variant="secondary">{race.year}</Badge>

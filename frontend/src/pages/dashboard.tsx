@@ -17,6 +17,8 @@ import {Separator} from "@/components/ui/separator.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
 import {InlineError, InlineLoading, RouteErrorBoundary} from "@/components/page-states.tsx";
 import {mockAnalyzeLap} from "@/src/mocks/coaching.ts";
+import DriverHeadshot from "@/components/driver-headshot.tsx";
+import {getTeamColor} from "@/lib/team-style.ts";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
@@ -85,6 +87,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
     }, [currentLap]);
 
     const averageSectors = useMemo(() => getSessionAverageSectors(loaderData.laps), [loaderData.laps]);
+    const teamColor = getTeamColor(loaderData.driver.teamName);
     const selectedLapDelta = selectedLap && loaderData.fastest.lapTime
         ? selectedLap.lapTime - loaderData.fastest.lapTime
         : 0;
@@ -115,11 +118,26 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
 
     return (
         <section className="space-y-6">
-            <Card>
-                <CardHeader className="gap-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <CardTitle>{loaderData.driver.fullName} [{loaderData.driver.teamName}]</CardTitle>
-                        <Badge variant="secondary">{loaderData.driver.driverCode}</Badge>
+            <Card className="overflow-hidden" style={{borderColor: `color-mix(in oklch, ${teamColor}, var(--border) 65%)`}}>
+                <div className="h-1.5 w-full" style={{backgroundColor: teamColor}}/>
+                <CardHeader className="gap-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                            <DriverHeadshot
+                                src={loaderData.driver.headshotUrl}
+                                name={loaderData.driver.fullName}
+                                teamColor={teamColor}
+                                className="size-18"
+                            />
+                            <div className="space-y-1">
+                                <CardTitle>{loaderData.driver.fullName}</CardTitle>
+                                <CardDescription>{loaderData.driver.teamName}</CardDescription>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{loaderData.driver.driverCode}</Badge>
+                            <Badge variant="outline">#{loaderData.driver.driverNumber}</Badge>
+                        </div>
                     </div>
                     <CardDescription>
                         {loaderData.race.location}, {loaderData.race.country} •
@@ -235,6 +253,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                                             key={lap.lapNumber}
                                             className={lap.lapNumber === currentLap ? "bg-muted/40" : undefined}
                                             onClick={() => setCurrentLap(lap.lapNumber)}
+                                            style={lap.lapNumber === currentLap ? {boxShadow: `inset 2px 0 0 ${teamColor}`} : undefined}
                                         >
                                             <TableCell>{lap.lapNumber}</TableCell>
                                             <TableCell>{lap.lapTime?.toFixed(3)}</TableCell>

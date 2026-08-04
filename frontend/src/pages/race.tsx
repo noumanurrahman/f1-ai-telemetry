@@ -8,6 +8,8 @@ import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState} from "react";
 import {Separator} from "@/components/ui/separator.tsx";
 import {RouteErrorBoundary} from "@/components/page-states.tsx";
+import DriverHeadshot from "@/components/driver-headshot.tsx";
+import {getTeamColor} from "@/lib/team-style.ts";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const drivers = await dataService.drivers(Number(params.year), Number(params.round));
@@ -32,7 +34,8 @@ export default function Component({loaderData}: Route.ComponentProps) {
 
     return (
         <section className="space-y-6">
-            <Card>
+            <Card className="overflow-hidden">
+                <div className="h-1 w-full bg-gradient-to-r from-chart-2 via-chart-3 to-chart-5"/>
                 <CardHeader className="gap-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle>{loaderData.race.eventName}</CardTitle>
@@ -61,18 +64,33 @@ export default function Component({loaderData}: Route.ComponentProps) {
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredDrivers.map((driver) => (
-                    <Card key={driver.driverNumber}>
-                        <CardHeader>
-                            <CardTitle className="flex items-center justify-between gap-2">
-                                <span>{driver.fullName}</span>
-                                <Badge variant="secondary">{driver.driverCode}</Badge>
-                            </CardTitle>
-                            <CardDescription>{driver.teamName}</CardDescription>
+                    <Card
+                        key={driver.driverNumber}
+                        className="overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
+                        style={{borderColor: `color-mix(in oklch, ${getTeamColor(driver.teamName)}, var(--border) 65%)`}}
+                    >
+                        <div className="h-1 w-full" style={{backgroundColor: getTeamColor(driver.teamName)}}/>
+                        <CardHeader className="gap-3">
+                            <div className="flex items-start gap-3">
+                                <DriverHeadshot
+                                    src={driver.headshotUrl}
+                                    name={driver.fullName}
+                                    teamColor={getTeamColor(driver.teamName)}
+                                />
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    <CardTitle className="flex items-center justify-between gap-2">
+                                        <span className="truncate">{driver.fullName}</span>
+                                        <Badge variant="secondary">{driver.driverCode}</Badge>
+                                    </CardTitle>
+                                    <CardDescription className="truncate">{driver.teamName}</CardDescription>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-1 text-sm text-muted-foreground">
                             <p>Classified: {driver.classifiedPosition}</p>
                             <p>Grid: {driver.gridPosition}</p>
                             <p>Points: {driver.points}</p>
+                            <p>Status: {driver.status}</p>
                         </CardContent>
                         <CardFooter>
                             <Button className="w-full" onClick={() => navigate(`/race/${loaderData.params.year}/${loaderData.params.round}/${driver.driverCode}`)}>

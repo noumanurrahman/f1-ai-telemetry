@@ -20,6 +20,7 @@ import {mockAnalyzeLap} from "@/src/mocks/coaching.ts";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
+    const race = await dataService.raceByRound(Number(params.year), Number(params.round));
     const laps = await dataService.lapsByDriver(Number(params.year), Number(params.round), params.driver);
     if (laps.length === 0) {
         throw new Error(`No laps available for ${params.driver} in this race`);
@@ -38,7 +39,7 @@ export async function clientLoader({params}: Route.LoaderArgs) {
         {name: "WET", laps: laps.filter((lap) => lap.compound === "WET").length, fill: "var(--color-wet)"},
     ]
     const telemetry = await loadTelemetry(Number(params.year), Number(params.round), params.driver, 1);
-    return {driver, laps, fastest, fastestTel, compoundType, telemetry};
+    return {driver, laps, fastest, fastestTel, compoundType, telemetry, race};
 }
 
 
@@ -117,12 +118,12 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
             <Card>
                 <CardHeader className="gap-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <CardTitle>{loaderData.driver.fullName}</CardTitle>
+                        <CardTitle>{loaderData.driver.fullName} [{loaderData.driver.teamName}]</CardTitle>
                         <Badge variant="secondary">{loaderData.driver.driverCode}</Badge>
                     </div>
                     <CardDescription>
-                        {loaderData.driver.teamName} • Position {loaderData.driver.classifiedPosition} •
-                        Round {params.round}, {params.year}
+                        {loaderData.race.location}, {loaderData.race.country} •
+                        Position {loaderData.driver.classifiedPosition}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-3 md:grid-cols-3">

@@ -10,11 +10,11 @@ function initials(name: string): string {
 }
 
 export default function DriverHeadshot({
-    src,
-    name,
-    teamColor,
-    className = "size-16",
-}: {
+                                           src,
+                                           name,
+                                           teamColor,
+                                           className = "size-16",
+                                       }: {
     src: string | null | undefined;
     name: string;
     teamColor: string;
@@ -25,8 +25,8 @@ export default function DriverHeadshot({
 
     return (
         <div
-            className={`${className} shrink-0 overflow-hidden rounded-xl border border-border/70 bg-muted/30`}
-            style={{boxShadow: `0 0 0 1px color-mix(in oklch, ${teamColor}, transparent 45%)`}}
+            className={`${className} shrink-0 overflow-hidden rounded-xl border-2 bg-muted/30`}
+            style={{borderColor: teamColor}}
         >
             {showImage ? (
                 <img

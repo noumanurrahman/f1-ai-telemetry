@@ -56,7 +56,7 @@ coaching feedback on driver mistakes.
 
 - [ ] Provision DigitalOcean droplet
 - [ ] Deploy FastAPI + SQLite + built frontend as one process
-- [ ] Env vars / secrets configured (Claude API key server-side only)
+- [ ] Env vars / secrets configured (OpenAI API key server-side only)
 
 ## Status
 

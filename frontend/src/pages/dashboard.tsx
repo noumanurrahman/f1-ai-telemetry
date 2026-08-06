@@ -289,7 +289,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                         <CardHeader>
                             <CardTitle>AI Coaching</CardTitle>
                             <CardDescription>
-                                Placeholder mode using backend-compatible analysis shape. OpenAI call is not wired yet.
+                                Get AI-based coaching and analysis.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">

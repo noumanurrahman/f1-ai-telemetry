@@ -62,5 +62,5 @@ coaching feedback on driver mistakes.
 
 - Planning complete.
 - Backend implemented.
-- Frontend almost completed.
-- AI integration pending.
+- Frontend completed.
+- AI integration done.

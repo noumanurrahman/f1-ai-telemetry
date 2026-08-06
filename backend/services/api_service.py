@@ -106,7 +106,8 @@ def read_drivers_payload(year: int, round_number: int) -> list[dict[str, Any]] |
     race = get_race(year, round_number)
     if not race:
         return {"error": "Race not found"}
-    drivers: list[RaceEntry] = RaceEntry.select().where(RaceEntry.race == race).execute()
+    drivers: list[RaceEntry] = RaceEntry.select().where(
+        RaceEntry.race == race).execute()
     return [serialize_driver(driver) for driver in drivers]
 
 
@@ -136,7 +137,8 @@ def read_laps_by_number_payload(year: int, round_number: int, lap_number: int) -
     if not race:
         return {"error": "Race not found"}
 
-    entries: list[RaceEntry] = RaceEntry.select().where(RaceEntry.race == race).execute()
+    entries: list[RaceEntry] = RaceEntry.select().where(
+        RaceEntry.race == race).execute()
     laps: list[dict[str, Any]] = []
     for entry in entries:
         lap: Lap | None = (
@@ -217,7 +219,8 @@ def create_lap_analysis_payload(year: int, round_number: int, driver_code: str, 
     if not entry:
         return {"error": "Driver not found"}
 
-    lap = Lap.get_or_none((Lap.entry == entry) & (Lap.lap_number == lap_number))
+    lap = Lap.get_or_none((Lap.entry == entry) &
+                          (Lap.lap_number == lap_number))
     if lap is None:
         raise HTTPException(status_code=404, detail="Lap not found")
 
@@ -232,11 +235,13 @@ def create_lap_analysis_payload(year: int, round_number: int, driver_code: str, 
 
     reference_lap = (
         Lap.select()
-        .where((Lap.entry == entry) & (Lap.is_personal_best == True))
+        .where((Lap.entry == entry) & (Lap.lap_time_seconds.is_null(False)))
+        .order_by(Lap.lap_time_seconds.asc())
         .first()
     )
     if reference_lap is None:
-        raise HTTPException(status_code=422, detail="No personal-best lap found to compare against")
+        raise HTTPException(
+            status_code=422, detail="No personal-best lap found to compare against")
     if reference_lap.lap_number == lap.lap_number:
         raise HTTPException(
             status_code=422,
@@ -252,7 +257,8 @@ def create_lap_analysis_payload(year: int, round_number: int, driver_code: str, 
             reference_lap=reference_lap,
         )
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Telemetry analysis failed: {exc}")
+        raise HTTPException(
+            status_code=502, detail=f"Telemetry analysis failed: {exc}")
 
     try:
         narrative = generate_narrative(summary)

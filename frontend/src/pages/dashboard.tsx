@@ -16,9 +16,9 @@ import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVal
 import {Separator} from "@/components/ui/separator.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
 import {InlineError, InlineLoading, RouteErrorBoundary} from "@/components/page-states.tsx";
-import {mockAnalyzeLap} from "@/src/mocks/coaching.ts";
 import DriverHeadshot from "@/components/driver-headshot.tsx";
 import {getTeamColor} from "@/lib/team-style.ts";
+import {formatText} from "@/lib/formatter.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
@@ -88,9 +88,6 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
 
     const averageSectors = useMemo(() => getSessionAverageSectors(loaderData.laps), [loaderData.laps]);
     const teamColor = getTeamColor(loaderData.driver.teamName);
-    const selectedLapDelta = selectedLap && loaderData.fastest.lapTime
-        ? selectedLap.lapTime - loaderData.fastest.lapTime
-        : 0;
 
     const generateCoaching = () => {
         if (!selectedLap) {
@@ -98,27 +95,23 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
         }
         setIsGeneratingCoaching(true);
         setCoachingError(null);
-        return mockAnalyzeLap({
-            lapNumber: selectedLap.lapNumber,
-            fastestLapNumber: loaderData.fastest.lapNumber,
-            baselineLapTimeDelta: selectedLapDelta,
-        })
+        return dataService.analysis(Number(params.year), Number(params.round), selectedLap.lapNumber, loaderData.driver.driverCode)
             .then((payload) => {
                 setCoaching(payload);
+                setIsGeneratingCoaching(false);
             })
             .catch((error: unknown) => {
                 const message = error instanceof Error ? error.message : "Failed to generate analysis";
                 setCoachingError(message);
                 setCoaching(null);
-            })
-            .finally(() => {
                 setIsGeneratingCoaching(false);
-            });
+            })
     };
 
     return (
         <section className="space-y-6">
-            <Card className="overflow-hidden" style={{borderColor: `color-mix(in oklch, ${teamColor}, var(--border) 65%)`}}>
+            <Card className="overflow-hidden"
+                  style={{borderColor: `color-mix(in oklch, ${teamColor}, var(--border) 65%)`}}>
                 <div className="h-1.5 w-full" style={{backgroundColor: teamColor}}/>
                 <CardHeader className="gap-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -387,7 +380,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
 
                                     <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                                         <p className="mb-2 text-xs text-muted-foreground">Narrative Coaching</p>
-                                        <p className="whitespace-pre-line text-sm text-foreground/90">{coaching.narrative ?? "Narrative unavailable."}</p>
+                                        <p className="whitespace-pre-line text-sm text-foreground/90">{coaching.narrative ? formatText(coaching.narrative) : "Narrative unavailable."}</p>
                                     </div>
                                 </div>
                             ) : null}

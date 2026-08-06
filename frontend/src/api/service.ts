@@ -1,5 +1,5 @@
 import apiClient from "@/src/api/client.ts";
-import type {Driver, Lap, Race, Season, TelemetryPoint} from "@/src/api/types.ts";
+import type {Driver, Lap, LapCoachingResponse, Race, Season, TelemetryPoint} from "@/src/api/types.ts";
 import axios from "axios";
 
 export class ApiRequestError extends Error {
@@ -28,7 +28,9 @@ function getErrorMessage(error: unknown): string {
 }
 
 function unwrapData<T>(data: unknown): T {
-    if (data && typeof data === "object" && "error" in data && typeof (data as { error?: unknown }).error === "string") {
+    if (data && typeof data === "object" && "error" in data && typeof (data as {
+        error?: unknown
+    }).error === "string") {
         throw new ApiRequestError((data as { error: string }).error);
     }
     return data as T;
@@ -76,5 +78,8 @@ export const dataService = {
     },
     telemetry: async (year: number, round: number, lap: number, driver: string): Promise<TelemetryPoint[]> => {
         return requestData<TelemetryPoint[]>(apiClient.get<TelemetryPoint[]>(`/races/${year}/${round}/${driver}/laps/${lap}/telemetry`));
+    },
+    analysis: async (year: number, round: number, lap: number, driver: string): Promise<LapCoachingResponse> => {
+        return requestData<LapCoachingResponse>(apiClient.post<LapCoachingResponse>(`/analysis/${year}/${round}/${driver}/${lap}`));
     }
 }

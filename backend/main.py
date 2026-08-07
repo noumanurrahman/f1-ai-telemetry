@@ -1,5 +1,7 @@
+import os
 from os import environ
 
+import fastf1
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +14,12 @@ origins = [
     "http://localhost:5173",
     environ["FRONTEND_URL"]
 ]
+
+CACHE_PATH = os.getenv(
+    "CACHE_PATH",
+    "./data/fastf1-cache"
+)
+fastf1.Cache.enable_cache(CACHE_PATH)
 
 app = FastAPI()
 

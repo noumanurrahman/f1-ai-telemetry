@@ -1,8 +1,14 @@
 import datetime
+import os
 
 import peewee as pw
 
-db = pw.SqliteDatabase("database.db")
+DATABASE_PATH = os.getenv(
+    "DATABASE_PATH",
+    "./data/database.db",
+)
+
+db = pw.SqliteDatabase(DATABASE_PATH)
 
 
 class BaseModel(pw.Model):

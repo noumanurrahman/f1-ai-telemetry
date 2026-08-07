@@ -1,10 +1,16 @@
+from os import environ
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import analysis_router, races_router, root_router
 
+load_dotenv()
+
 origins = [
     "http://localhost:5173",
+    environ["FRONTEND_URL"]
 ]
 
 app = FastAPI()

@@ -19,6 +19,7 @@ import {InlineError, InlineLoading, RouteErrorBoundary} from "@/components/page-
 import DriverHeadshot from "@/components/driver-headshot.tsx";
 import {getTeamColor} from "@/lib/team-style.ts";
 import {formatText} from "@/lib/formatter.tsx";
+import {Telemetry} from "@/components/charts/telemetry.tsx";
 
 export async function clientLoader({params}: Route.LoaderArgs) {
     const driver = await dataService.driver(Number(params.year), Number(params.round), params.driver);
@@ -395,6 +396,7 @@ export default function Component({loaderData, params}: Route.ComponentProps) {
                         <LapPlaybackProvider key={currentLap} telemetry={telemetry}>
                             <PlaybackControls/>
                             <TrackMap referenceTelemetry={loaderData.fastestTel}/>
+                            <Telemetry telemetry={telemetry}/>
                         </LapPlaybackProvider>
                     </Card>
                 </div>

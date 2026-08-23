@@ -1,6 +1,6 @@
 # F1 Telemetry Dashboard
 
-![WIP Screenshot](screenshots/Screenshot%202.png)
+[![Project Demo](screenshots/project-demo.png)](https://youtube.com/watch?v=wDVv6MFinnU)
 
 An F1 telemetry dashboard: browse season → race → driver, play back lap telemetry on a track map, and get AI-generated
 coaching feedback on driver mistakes.

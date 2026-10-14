@@ -1,4 +1,4 @@
-# F1 Telemetry Dashboard
+# F1 AI Telemetry Dashboard
 
 [![Project Demo](screenshots/project-demo.png)](https://youtube.com/watch?v=wDVv6MFinnU)
 
